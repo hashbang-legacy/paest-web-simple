@@ -1,0 +1,67 @@
+<html>
+<head>
+<style>
+html, body, textarea { height:100%; width:100%; margin:0; }
+</style>
+</head>
+<body style="display:table">
+<div style='display:table-row'><span id='id'></span></div>
+<div style='display:table-row;height:100%'>
+<textarea id='edit'></textarea>
+</div>
+<script type="text/javascript">
+function updateHeader() {
+  document.getElementById('id').textContent = "id: " + paest_id;
+}
+
+function req(method, paest_id, data) {
+  return new Promise(function(ret, thr){
+    var xhr = new XMLHttpRequest();
+    xhr.open(method, "http://a.pae.st/" + paest_id, true);
+    xhr.onreadystatechange=function() {
+      if(xhr.readyState===4){
+        if(xhr.status===200)
+          ret(xhr.responseText);
+        if(xhr.status===403)
+          thr(xhr.responseText);
+      }
+    }
+    if(method === "POST") {
+      xhr.setRequestHeader('Content-Type', 'application/json');
+    }
+    xhr.send(data);
+  });
+}
+
+var scheduled_save;
+function save() {
+  req("POST", paest_id +"/"+ paest_key, JSON.stringify({d:editor.value}))
+  .then(function(data){
+    data = JSON.parse(data);
+    if(!data.p) // deleted the paest or something. don't set stuff to 'undefined'
+      return
+    paest_id = data.p;
+    paest_key = data.k;
+    document.location.hash=paest_id +"#" + paest_key
+    scheduled_save = 0;
+    updateHeader();
+  })
+  .catch(function(){
+    if(scheduled_save)
+      clearTimeout(scheduled_save)
+    scheduled_save = setTimeout(save, 2000); // Try again in 2 seconds, this loops until saved
+  });
+}
+
+var editor = document.getElementById('edit');
+var hashes = document.location.hash.substring(1).split("#")
+var paest_id = hashes[0];
+var paest_key = hashes[1] || "";
+req("GET", paest_id).then(function(data) {
+  editor.value=data;
+});
+editor.onkeyup=save;
+updateHeader();
+</script>
+</body>
+</html>
