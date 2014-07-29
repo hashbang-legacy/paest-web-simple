@@ -42,7 +42,7 @@ function save() {
       return
     paest_id = data.p;
     paest_key = data.k;
-    document.location.hash=paest_id +"#" + paest_key
+    history.replaceState({}, "", "/" + paest_id + "/" + paest_key);
     scheduled_save = 0;
     updateHeader();
   })
@@ -54,7 +54,7 @@ function save() {
 }
 
 var editor = document.getElementById('edit');
-var hashes = document.location.hash.substring(1).split("#")
+var hashes = document.location.pathname.substring(1).split("/")
 var paest_id = hashes[0];
 var paest_key = hashes[1] || "";
 req("GET", paest_id).then(function(data) {
