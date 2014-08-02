@@ -35,6 +35,8 @@ function req(method, paest_id, data) {
 
 var scheduled_save;
 function save() {
+  if(scheduled_save) return; // we'll save in a moment. don't spam
+
   req("POST", paest_id +"/"+ paest_key, JSON.stringify({d:editor.value}))
   .then(function(data){
     data = JSON.parse(data);
